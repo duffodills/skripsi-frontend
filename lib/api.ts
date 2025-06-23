@@ -638,14 +638,14 @@ export async function deleteUserList(slug: string, token: string): Promise<void>
 
 export async function fetchUserProfile(
   username: string,
-  token: string
+  token?: string | null
 ): Promise<ProfileResponse> {
   const res = await fetch(
     `${baseUrl}/api/user/${encodeURIComponent(username)}`,
     {
       headers: {
         "X-API-KEY": apiKey || "",
-        Authorization: `Bearer ${token}`,
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
     }
@@ -657,14 +657,14 @@ export async function fetchUserProfile(
 
 export async function fetchUserFollowing(
   byUsername: string,
-  token: string
+  token: string | null
 ): Promise<FollowingUser[]> {
   const res = await fetch(
     `${baseUrl}/api/user/${encodeURIComponent(byUsername)}/following`,
     {
       headers: {
-        Authorization: `Bearer ${token}`,
         "X-API-KEY": apiKey || "",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
     }
@@ -737,16 +737,16 @@ export async function updateUserProfile(
 // ======== get follower user =========
 export async function fetchUserFollower(
   username: string,
-  token: string
+  token: string | null
 ): Promise<FollowingUser[]> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${encodeURIComponent(
       username
-    )}/following`,
+    )}/followers`,
     {
       headers: {
-        Authorization: `Bearer ${token}`,
-        "X-API-KEY": process.env.NEXT_PUBLIC_API_KEY!,
+        "X-API-KEY": apiKey || "",
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       credentials: "include",
     }

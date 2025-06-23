@@ -1,73 +1,50 @@
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useAuth } from "@/context/AuthContext"
-import { fetchUserFollower } from "lib/api"
-import { FollowerUser } from "@/interfaces/api/ListsOfApiInterface"
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { fetchUserFollower } from "lib/api";
+import { FollowerUser } from "@/interfaces/api/ListsOfApiInterface";
+import Link from "next/link";
 
-export default function FollowersList() {
-  const { user, token } = useAuth()
-  const [list, setList] = useState<FollowerUser[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface FollowerListProps {
+  username?: string;
+}
+
+export default function FollowerList({ username }: FollowerListProps) {
+  const { user, token } = useAuth();
+  const [list, setList] = useState<FollowerUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !token) return
-    const username = user.username
-    const authToken = token
+    if (!username) return;
+    setLoading(true);
+    fetchUserFollower(username, token ?? null)
+      .then(setList)
+      .catch((err) => console.error("Failed to fetch following:", err))
+      .finally(() => setLoading(false));
+  }, [username, token]);
 
-    async function load() {
-      try {
-        const data = await fetchUserFollower(username, authToken)
-        setList(data)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    load()
-  }, [user, token])
-
-  if (!user) return null
-  if (loading) return <div className="p-8 text-white">Loading...</div>
-  if (error) return <div className="p-8 text-red-500">{error}</div>
-
-  if (list.length === 0) {
-    return (
-      <div className="p-8 text-gray-400">
-        You don’t have any followers yet.
-      </div>
-    )
-  }
+  if (loading) return <div className="p-8 text-white">Loading...</div>;
 
   return (
-    <ul className="divide-y divide-gray-700">
-      {list.map((f) => {
-        const avatarPath = f.profile_picture_url
-          ? encodeURI(new URL(f.profile_picture_url).pathname)
-          : "/avatars/default.png"
-
-        return (
-          <li
-            key={f.id}
-            className="flex items-center space-x-4 py-4 px-8 hover:bg-gray-800"
-          >
-            <img
-              src={avatarPath}
-              alt={f.username}
-              className="w-12 h-12 rounded-full object-cover bg-gray-700"
-              onError={(e) => {
-                e.currentTarget.onerror = null
-                e.currentTarget.src = "/avatars/default.png"
-              }}
-            />
-            <Link href={`/profile/${f.username}`} className="text-lg text-white hover:underline">
-              {f.username}
-            </Link>
-          </li>
-        )
-      })}
-    </ul>
-  )
+    <div className="px-8 pb-12 flex flex-col gap-4">
+      {list.map((profile) => (
+        <Link
+          key={`${profile.id}-${profile.username}`} // ✅ jaminan key unik
+          href={`/profile/${profile.username}`}
+          className="flex items-center gap-4 bg-[#1C1F26] hover:bg-[#2B2F38] rounded-md px-4 py-3 transition"
+        >
+          <img
+            src={profile.profile_picture_url ?? "/avatars/default.png"}
+            alt={profile.username}
+            className="w-12 h-12 rounded-full object-cover"
+          />
+          <div>
+            <div className="text-white font-medium">{profile.username}</div>
+            <div className="text-sm text-gray-400">
+              {profile.firstname} {profile.lastname}
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
 }
