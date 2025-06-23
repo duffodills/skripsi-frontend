@@ -1,4 +1,3 @@
-// src/components/AddReviewModal.tsx
 import { Fragment, useState } from "react";
 import {
   Dialog,
@@ -15,12 +14,14 @@ interface AddReviewModalProps {
   igdbId: number;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void; // 🔥 success callback untuk parent
 }
 
 export default function AddReviewModal({
   igdbId,
   isOpen,
   onClose,
+  onSuccess,
 }: AddReviewModalProps) {
   const { isAuthenticated, token } = useAuth();
   const router = useRouter();
@@ -64,7 +65,8 @@ export default function AddReviewModal({
 
     try {
       await createDiaryEntry(body, token!);
-      onClose();
+      onClose();      // tutup form
+      onSuccess();    // panggil modal sukses dari parent
     } catch (e: any) {
       setError(e.message || "Failed to save review");
     } finally {
@@ -88,7 +90,7 @@ export default function AddReviewModal({
           <div className="fixed inset-0 bg-black/60" />
         </Transition.Child>
 
-        {/* MODAL WRAPPER */}
+        {/* MODAL */}
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
@@ -101,7 +103,7 @@ export default function AddReviewModal({
               leaveTo="opacity-0 scale-95"
             >
               <DialogPanel className="w-full max-w-lg transform overflow-hidden rounded-lg bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                {/* Header */}
+                {/* HEADER */}
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                   <DialogTitle as="h3" className="text-lg font-medium text-white">
                     Add your review
@@ -109,7 +111,7 @@ export default function AddReviewModal({
                   <button onClick={onClose} className="text-white text-xl">✕</button>
                 </div>
 
-                {/* Form */}
+                {/* FORM */}
                 <div className="mt-4 space-y-4 text-white">
                   <label className="block">
                     <span className="text-sm">Finished on</span>
@@ -134,6 +136,7 @@ export default function AddReviewModal({
                         ))}
                       </select>
                     </label>
+
                     <label className="flex-1">
                       <span className="text-sm">Status</span>
                       <select
@@ -180,7 +183,7 @@ export default function AddReviewModal({
                   {error && <p className="text-sm text-red-400">{error}</p>}
                 </div>
 
-                {/* Footer */}
+                {/* FOOTER */}
                 <div className="mt-6 flex justify-end">
                   <button
                     onClick={handleSave}

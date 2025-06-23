@@ -1,12 +1,11 @@
-// src/components/FollowButton.tsx
-import { useState } from "react"
-import { followUser, unfollowUser } from "lib/api"
+import { useState, useEffect } from "react";
+import { followUser, unfollowUser } from "lib/api";
 
 interface FollowButtonProps {
-  userId: number
-  token: string
-  initialFollowing: boolean
-  onChange?: (newState: boolean) => void
+  userId: number;
+  token: string;
+  initialFollowing: boolean;
+  onChange?: (newState: boolean) => void;
 }
 
 export default function FollowButton({
@@ -15,28 +14,33 @@ export default function FollowButton({
   initialFollowing,
   onChange,
 }: FollowButtonProps) {
-  const [loading, setLoading] = useState(false)
-  const [following, setFollowing] = useState(initialFollowing)
+  const [loading, setLoading] = useState(false);
+  const [following, setFollowing] = useState(initialFollowing);
+
+  // ✅ sync initialFollowing when component mounts
+  useEffect(() => {
+    setFollowing(initialFollowing);
+  }, [initialFollowing]);
 
   const toggle = async () => {
-    if (loading) return
-    setLoading(true)
+    if (loading) return;
+    setLoading(true);
     try {
       if (following) {
-        await unfollowUser(userId, token)
-        setFollowing(false)
-        onChange?.(false)
+        await unfollowUser(userId, token);
+        setFollowing(false);
+        onChange?.(false);
       } else {
-        await followUser(userId, token)
-        setFollowing(true)
-        onChange?.(true)
+        await followUser(userId, token);
+        setFollowing(true);
+        onChange?.(true);
       }
     } catch (err) {
-      console.error(err)
+      console.error("Failed to follow user", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <button
@@ -51,5 +55,5 @@ export default function FollowButton({
     >
       {loading ? "…" : following ? "Unfollow" : "Follow"}
     </button>
-  )
+  );
 }

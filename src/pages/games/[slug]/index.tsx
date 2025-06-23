@@ -10,6 +10,9 @@ import { getGameBySlug } from "lib/api";
 import "keen-slider/keen-slider.min.css";
 import { useKeenSlider } from "keen-slider/react";
 
+// ✅ NEW
+import SuccessModal from "@/components/SuccessModal";
+
 interface Game {
   id: number;
   igdb_id: number;
@@ -63,6 +66,9 @@ const GameDetailPage: React.FC<DetailProps> = ({ game }) => {
 
   const [recommendations, setRecommendations] = useState<RecommendedGame[]>([]);
   const [recLoading, setRecLoading] = useState(true);
+
+  // ✅ NEW
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [sliderRef] = useKeenSlider<HTMLDivElement>({
     loop: true,
@@ -132,7 +138,7 @@ const GameDetailPage: React.FC<DetailProps> = ({ game }) => {
                 >
                   Add to Review
                 </button>
-                  <AddToWantToPlayButton igdbId={game.igdb_id} />
+                <AddToWantToPlayButton igdbId={game.igdb_id} />
               </div>
             </div>
 
@@ -210,8 +216,16 @@ const GameDetailPage: React.FC<DetailProps> = ({ game }) => {
           igdbId={game.igdb_id}
           isOpen={isReviewOpen}
           onClose={() => setIsReviewOpen(false)}
+          onSuccess={() => setShowSuccess(true)} // ✅ NEW
         />
       )}
+
+      {/* ✅ Success Modal */}
+      <SuccessModal
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message="Game successfully added to diary!"
+      />
     </div>
   );
 };

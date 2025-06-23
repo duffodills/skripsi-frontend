@@ -5,6 +5,7 @@ import { fetchUserProfile } from "lib/api";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ProfileResponse } from "@/interfaces/api/ListsOfApiInterface";
+import { Pencil } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, token } = useAuth();
@@ -47,9 +48,11 @@ export default function ProfilePage() {
     rating_count: 0,
   });
 
-  const avatarUrl = profile.profile_picture_url
-    ? encodeURI(new URL(profile.profile_picture_url).pathname)
-    : null;
+  // ✅ FIXED avatar logic
+  const isDefaultFromBackend = profile.profile_picture?.includes("default");
+  const avatarUrl = isDefaultFromBackend
+    ? "/avatars/default.png"
+    : profile.profile_picture ?? "/avatars/default.png";
 
   return (
     <div className="min-h-screen bg-[#11161D] text-gray-100 p-4 sm:p-6 md:p-8">
@@ -57,28 +60,26 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row justify-between gap-6 mb-12">
         <div className="flex items-center space-x-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden">
-            {avatarUrl && (
-              <img
-                src={avatarUrl}
-                alt={profile.username}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = "/avatars/default.png";
-                }}
-              />
-            )}
+            <img
+              src={profile.profile_picture_url ?? "/avatars/default.png"}
+              alt={profile.username}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/avatars/default.png";
+              }}
+            />
           </div>
           <div>
             <div className="text-2xl font-semibold flex items-center">
               {profile.username}
-              <button
+              <Pencil
+                size={18}
+                className="ml-2 text-gray-400 hover:text-yellow-400 cursor-pointer"
                 onClick={() => router.push("/profile/edit")}
-                className="ml-2 text-gray-400 hover:text-white"
-              >
-                ✏️
-              </button>
+              />
             </div>
+            <div className="text-gray-300">{profile.firstname} {profile.lastname}</div>
             <p className="mt-2 text-gray-400 max-w-md">{profile.bio ?? ""}</p>
           </div>
         </div>
