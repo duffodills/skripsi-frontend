@@ -36,7 +36,7 @@ export default function ListIndexPage() {
         <h1 className="text-2xl font-bold">GAMELIST</h1>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"
+          className="bg-[#5385BF] hover:bg-blue-500 text-white px-4 py-2 rounded text-sm"
         >
           Create New List
         </button>

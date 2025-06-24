@@ -43,7 +43,7 @@ export default function EditProfileForm({
         setEmail(p.email ?? "")
         setBio(p.bio ?? "")
         setAvatarUrl(
-          p.profile_picture_url || "/avatars/default.png"
+          p.profile_picture_url || "/avatars/default.jpg"
         )
       } catch (e) {
         setError("Failed to load profile")
@@ -189,7 +189,7 @@ export default function EditProfileForm({
 
       <button
         type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+        className="w-full bg-[#5385BF] hover:bg-blue-500 text-white py-2 rounded"
       >
         Save
       </button>
