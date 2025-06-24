@@ -157,7 +157,7 @@ export default function ProfilePage() {
           </Section>
 
           <Link href="/activity">
-            <div className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm text-center">
+            <div className="bg-[#5385BF] hover:bg-blue-500 text-white py-2 px-4 rounded-lg text-sm text-center">
               Go to {user!.username} Diary
             </div>
           </Link>

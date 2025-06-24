@@ -60,7 +60,7 @@ export default function ForumIndex({
           </a>
         )}
 
-        <span className="px-3 py-1 rounded bg-blue-600">{currentPage}</span>
+        <span className="px-3 py-1 rounded bg-[#5385BF] hover:bg-blue-500">{currentPage}</span>
 
         {nextPage && (
           <a

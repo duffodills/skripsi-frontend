@@ -58,7 +58,7 @@ const SearchPage: NextPage = () => {
           className="w-full border text-black border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
 
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-3 mb-6 ">
           <FilterButton label="Game" active={filter === 'game'} onClick={() => setFilter('game')} />
           <FilterButton label="User" active={filter === 'user'} onClick={() => setFilter('user')} />
           <FilterButton label="Forum" active={filter === 'forum'} onClick={() => setFilter('forum')} />

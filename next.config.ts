@@ -29,6 +29,18 @@ const nextConfig = {
         port: '8000',
         pathname: '/storage/**',
       },
+            {
+        protocol: 'https',
+        hostname: 'skripsi-backend-production-7fd4.up.railway.app',
+        port: '',
+        pathname: '/api/user/profile-picture/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8000',
+        pathname: '/api/user/profile-picture/**',
+      },
     ],
   },
   async rewrites() {

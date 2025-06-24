@@ -47,7 +47,7 @@ export default function ForumThreadsPage({ slug, game, threads, currentPage, las
         <h1 className="text-3xl font-bold mb-4">{game.name} Discussion</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="mb-6 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+          className="mb-6 px-4 py-2 bg-[#5385BF] rounded hover:bg-blue-500"
         >
           Create New Post
         </button>
@@ -74,7 +74,7 @@ export default function ForumThreadsPage({ slug, game, threads, currentPage, las
               <div className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">← Prev</div>
             </Link>
           )}
-          <span className="px-3 py-1 bg-blue-600 rounded">{currentPage}</span>
+          <span className="px-3 py-1 bg-[#5385BF] hover:bg-blue-500 rounded">{currentPage}</span>
           {nextPage && (
             <Link href={`/forum/${slug}?page=${nextPage}`}>
               <div className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600">Next →</div>
