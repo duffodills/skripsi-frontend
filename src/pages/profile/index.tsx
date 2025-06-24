@@ -51,8 +51,8 @@ export default function ProfilePage() {
   // ✅ FIXED avatar logic
   const isDefaultFromBackend = profile.profile_picture?.includes("default");
   const avatarUrl = isDefaultFromBackend
-    ? "/avatars/default.png"
-    : profile.profile_picture ?? "/avatars/default.png";
+    ? "/avatars/default.jpg"
+    : profile.profile_picture ?? "/avatars/default.jpg";
 
   return (
     <div className="min-h-screen bg-[#11161D] text-gray-100 p-4 sm:p-6 md:p-8">
@@ -61,12 +61,12 @@ export default function ProfilePage() {
         <div className="flex items-center space-x-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden">
             <img
-              src={profile.profile_picture_url ?? "/avatars/default.png"}
+              src={profile.profile_picture_url ?? "/avatars/default.jpg"}
               alt={profile.username}
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = "/avatars/default.png";
+                e.currentTarget.src = "/avatars/default.jpg";
               }}
             />
           </div>

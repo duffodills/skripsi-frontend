@@ -43,9 +43,7 @@ export default function EditProfileForm({
         setEmail(p.email ?? "")
         setBio(p.bio ?? "")
         setAvatarUrl(
-          p.profile_picture
-            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/storage/${p.profile_picture}`
-            : null
+          p.profile_picture_url || "/avatars/default.png"
         )
       } catch (e) {
         setError("Failed to load profile")

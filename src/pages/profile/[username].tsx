@@ -59,12 +59,12 @@ useEffect(() => {
         <div className="flex items-center space-x-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden">
             <img
-              src={profile.profile_picture_url ?? "/avatars/default.png"}
+              src={profile.profile_picture_url ?? "/avatars/default.jpg"}
               alt={profile.username}
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = "/avatars/default.png";
+                e.currentTarget.src = "/avatars/default.jpg";
               }}
             />
           </div>
