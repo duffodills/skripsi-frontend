@@ -34,9 +34,13 @@ export default function FollowingList({ username }: FollowingListProps) {
           className="flex items-center gap-4 bg-[#1C1F26] hover:bg-[#2B2F38] rounded-md px-4 py-3 transition"
         >
           <img
-            src={profile.profile_picture_url ?? "/avatars/default.jpg"}
-            alt={profile.username}
-            className="w-12 h-12 rounded-full object-cover"
+              src={profile.profile_picture_url ?? "/avatars/default.jpg"}
+              alt={profile.username}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/avatars/default.jpg";
+              }}
           />
           <div>
             <div className="text-white font-medium">{profile.username}</div>
