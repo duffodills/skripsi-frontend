@@ -23,8 +23,8 @@ interface Game {
   cover: string;
   genres: string[];
   platforms: string[];
-  release_date: string;
-  developer: string;
+  first_release_date: string;
+  developers: string[];
   screenshots: string[];
 }
 
@@ -146,7 +146,7 @@ const GameDetailPage: React.FC<DetailProps> = ({ game }) => {
             <div className="w-full lg:w-2/4">
               <h1 className="text-4xl font-bold">{game.name}</h1>
               <p className="text-gray-300 mt-2">
-                Released on {game.release_date || "Unknown"} by {game.developer || "Unknown"}
+                Released on {game.first_release_date || "Unknown"} by {game.developers[0] || "Unknown"}
               </p>
               <p className="text-gray-400 mt-1">
                 Platform: {game.platforms?.join(", ") || "Unknown"}

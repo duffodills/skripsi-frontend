@@ -79,7 +79,7 @@ export default function ProfilePage() {
                 onClick={() => router.push("/profile/edit")}
               />
             </div>
-            <div className="text-gray-300">{profile.firstname} {profile.lastname}</div>
+            <div className="text-gray-300 italic">{profile.firstname} {profile.lastname}</div>
             <p className="mt-2 text-gray-400 max-w-md">{profile.bio ?? ""}</p>
           </div>
         </div>

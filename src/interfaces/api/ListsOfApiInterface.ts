@@ -1,6 +1,7 @@
 export interface LoginResponse{
   token: string;
   username: string;
+  profile_picture_url?: string;
 }
 
 export interface CreateDiaryBody {
@@ -10,6 +11,15 @@ export interface CreateDiaryBody {
   rating: number; // 1–5
   review: string;
   played_at: string; // ISO date, e.g. "2024-04-15"
+  liked: boolean;
+}
+
+export interface UpdateDiaryBody {
+  platform: string;
+  status: "completed" | "in-progress" | "dropped";
+  rating: number;
+  review: string;
+  played_at: string;  // format: 'YYYY-MM-DD'
   liked: boolean;
 }
 
@@ -197,49 +207,23 @@ export interface DiaryDetail {
 // interfaces/DiaryEntry.ts
 
 export interface DiaryEntry {
-  /** ID unik diary entry */
   id: number;
-
-  /** Tanggal main, ISO string */
   played_at: string;
-
-  /** Platform tempat main (opsional, kalau API kirim) */
   platform?: string;
-
-  /** Status session (misal “completed”, “in-progress”) */
   status?: string;
-
-  /** Rating 1–5 */
   rating: number;
-
-  /** Isi review, null kalau user nggak menulis review */
   review: string | null;
-
-  /** Jumlah replay untuk game ini */
   replay_count?: number;
-
-  /** Jumlah like pada entry ini */
   liked?: number;
-
-  /** Jumlah like pada review (jika ada) */
-  review_likes_count?: number;
-
-  /** 0 = entry biasa, 1 = reply komentar */
-  is_reply?: number;
-
-  /** Data game terkait */
+  likes_count?: number;
+  is_liked: boolean;
+  is_replay?: number;
   game: {
-    /** ID game di IGDB */
     igdb_id: number;
-
-    /** Nama game */
     name: string;
-
-    /** URL cover image */
+    slug: string;
     cover_url: string;
-
-    /** Tahun rilis (opsional, kalau API kirim) */
-    released?: number;
+    first_release_date?: string;
   };
 }
 

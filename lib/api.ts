@@ -1,7 +1,7 @@
 //  --------------------- api login user -------------------------------
 // lib/api.ts
 
-import { ActivityDetail, CreateDiaryBody, CreateListBody, CreateThreadBody, DiaryComment, DiaryDetail, DiaryEntry, FetchForumThreadsBySlugOpts, FollowerUser, FollowingUser, ForumThread, GameList, LoginResponse, ProfileResponse, Reply, UserList } from "@/interfaces/api/ListsOfApiInterface";
+import { ActivityDetail, CreateDiaryBody, CreateListBody, CreateThreadBody, DiaryComment, DiaryDetail, DiaryEntry, FetchForumThreadsBySlugOpts, FollowerUser, FollowingUser, ForumThread, GameList, LoginResponse, ProfileResponse, Reply, UpdateDiaryBody, UserList } from "@/interfaces/api/ListsOfApiInterface";
 import { Game } from "@/interfaces/Game";
 
 
@@ -195,6 +195,7 @@ export async function fetchFavorites(username: string, token: string) {
     },
   });
 
+  if (res.status === 404) return [];
   if (!res.ok) throw new Error("Failed to fetch favorites");
   const json = await res.json();
   return json.data as { igdb_id: number }[];
@@ -258,6 +259,87 @@ export async function createDiaryEntry(body: CreateDiaryBody, token: string) {
   return res.json();
 }
 
+export async function updateDiaryEntry(
+  diaryId: number,
+  body: UpdateDiaryBody,
+  token: string
+) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": process.env.NEXT_PUBLIC_API_KEY || "",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) throw new Error(`Failed to update diary (${res.status})`);
+  return res.json();
+}
+
+export async function deleteDiaryEntry(
+  diaryId: number,
+  token: string
+) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": process.env.NEXT_PUBLIC_API_KEY || "",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+    }
+  );
+  if (!res.ok) throw new Error(`Failed to delete diary (${res.status})`);
+  return true;
+}
+
+export async function likeDiary(diaryId: number, token: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}/like`,
+    {
+      method: "POST",
+      headers: {
+        "Accept": "*/*",
+        "X-API-KEY": process.env.NEXT_PUBLIC_API_KEY || "",
+        Authorization: `Bearer ${token}`,
+        "X-CSRF-TOKEN": "",
+      },
+      credentials: "include",
+      body: "", // penting: harus string kosong untuk curl-mu
+    }
+  );
+  if (!res.ok) throw new Error("Failed to like diary");
+  return res.json();
+}
+
+export async function unlikeDiary(diaryId: number, token: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}/unlike`,
+    {
+      method: "DELETE",
+      headers: {
+        "Accept": "*/*",
+        "X-API-KEY": process.env.NEXT_PUBLIC_API_KEY || "",
+        Authorization: `Bearer ${token}`,
+        "X-CSRF-TOKEN": "",
+      },
+      credentials: "include",
+      body: "",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to unlike diary");
+  return res.json();
+}
+
+
 // ------------------------- api button add to want to play ---------------------
 // wishlist
 export async function fetchUserWishlist(username: string, token: string) {
@@ -272,6 +354,7 @@ export async function fetchUserWishlist(username: string, token: string) {
     }
   );
 
+  if (res.status === 404) return [];
   if (!res.ok) {
     throw new Error(`Failed to fetch wishlist (${res.status})`);
   }
@@ -496,9 +579,6 @@ export async function fetchRepliesByThreadId(
 
 // src/lib/api.ts
 
-
-
-
 // call this when you POST a new thread
 export async function createForumThread(
     slug: string,
@@ -523,6 +603,33 @@ export async function createForumThread(
   const json = await res.json();
   return json.data as ForumThread;
 }
+
+// API Like Forums
+
+export async function likeThread(threadId: number, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/forum/${threadId}/like`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to like thread");
+  return true;
+}
+
+export async function unlikeThread(threadId: number, token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/forum/${threadId}/unlike`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!res.ok) throw new Error("Failed to unlike thread");
+  return true;
+}
+
 
 
 // ---------------------- api List Page -------------------------------
@@ -824,58 +931,52 @@ export async function fetchDiaryList(): Promise<ApiResponse<DiaryEntry[]>> {
 export async function fetchDiaryDetail(
   username: string,
   diaryId: number,
-  token: string
+  token?: string // sekarang optional
 ): Promise<DiaryEntry> {
+  const headers: Record<string, string> = {
+    "X-API-KEY": apiKey || "",
+    Accept: "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(
     `${baseUrl}/api/user/${username}/diary/${diaryId}`,
     {
       method: 'GET',
-      headers: {
-        "X-API-KEY": apiKey || "",
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
+      headers,
     }
-  )
+  );
 
   if (!res.ok) {
-    throw new Error(`Gagal fetch diary detail: ${res.status}`)
+    throw new Error(`Gagal fetch diary detail: ${res.status}`);
   }
 
-  const json = await res.json()
-  return json.data // assumed to be a DiaryEntry
+  const json = await res.json();
+  return json.data; // assumed to be a DiaryEntry
 }
 
-export const fetchActivityDetail = async (
-  id: number,
-  ctx?: { req?: { headers?: { cookie?: string } } }
-): Promise<{ data: ActivityDetail }> => {
-  const headers = {  "X-API-KEY": apiKey || "",
-      "Accept":    "application/json", } as Record<string, string>
-  if (ctx?.req?.headers?.cookie) {
-    headers['cookie'] = ctx.req.headers.cookie
-  }
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/{username}/activity/${id}`,
-    { headers }
-  )
-  if (!res.ok) throw new Error(`Status ${res.status}`)
-  return res.json()
-}
 
 // lib/api.ts
 
 //========= api activity / diary fix ===========
-export async function fetchUserDiary(username: string, token: string): Promise<DiaryEntry[]> {
+export async function fetchUserDiary(
+  username: string,
+  token?: string
+): Promise<DiaryEntry[]> {
+  const headers: Record<string, string> = {
+    "X-API-KEY": apiKey || "",
+    Accept: "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${username}/diary`,
     {
-      method: 'GET',
-      headers: {
-        "X-API-KEY": apiKey || "",
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
+      method: "GET",
+      headers,
     }
   );
 
@@ -888,7 +989,7 @@ export async function fetchUserDiary(username: string, token: string): Promise<D
 }
 
 
-export async function fetchDiaryComments(diaryId: number, token: string): Promise<DiaryComment[]> {
+export async function fetchDiaryComments(diaryId: number, token?: string | null): Promise<DiaryComment[]> {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}/comments`,
     {
@@ -901,6 +1002,24 @@ export async function fetchDiaryComments(diaryId: number, token: string): Promis
        },
     }
   )
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error('Gagal mengambil komentar')
+  const json = await res.json()
+  return json.data
+}
+
+export async function fetchDiaryPublicComments(diaryId: number): Promise<DiaryComment[]> {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/diary/${diaryId}/comments`,
+    {
+      method: 'GET',
+      headers: { 
+        Accept: 'application/json',
+        "X-API-KEY": apiKey || "",
+       },
+    }
+  )
+  if (res.status === 404) return [];
   if (!res.ok) throw new Error('Gagal mengambil komentar')
   const json = await res.json()
   return json.data
