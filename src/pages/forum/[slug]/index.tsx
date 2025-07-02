@@ -42,8 +42,8 @@ export default function ForumThreadsPage({ slug, game, threads, currentPage, las
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-[#11161D] text-white">
+      <div className="container p-6 max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">{game.name} Discussion</h1>
         <button
           onClick={() => setIsModalOpen(true)}
@@ -57,10 +57,10 @@ export default function ForumThreadsPage({ slug, game, threads, currentPage, las
             <li key={t.id} className="p-4 bg-gray-800 rounded">
               <Link href={`/forum/${encodeURIComponent(slug)}/thread/${t.id}`}>  
                 <div className="block space-y-2 hover:bg-gray-700 p-2 rounded">
-                  <p className="font-semibold text-white">{t.title}</p>
+                  <p className="font-semibold text-3xl text-white">{t.title}</p>
                   <p className="text-sm text-gray-400 truncate">{t.content}</p>
                   <p className="text-xs text-gray-500">
-                    by {t.user.username} · {t.replies_count} replies
+                    by {t.user.username} · {t.replies_count} replies · {t.likes_count} likes
                   </p>
                 </div>
               </Link>

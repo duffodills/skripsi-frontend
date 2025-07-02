@@ -1,10 +1,12 @@
+// pages/profile/[username]/activity/[id].tsx
+
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { DiaryComment, DiaryEntry } from "@/interfaces/api/ListsOfApiInterface";
 import {
-  fetchDiaryComments,
   fetchDiaryDetail,
+  fetchDiaryComments,
   postDiaryComment,
   likeDiary,
   unlikeDiary,
@@ -29,33 +31,42 @@ function formatRelease(dateStr?: string) {
   });
 }
 
-export default function DiaryDetailPage() {
+export default function PublicDiaryDetailPage() {
   const router = useRouter();
-  const { id } = router.query;
-  const { user, token } = useAuth();
+  const { username, id } = router.query as { username?: string; id?: string };
+  const { token } = useAuth();
 
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [comments, setComments] = useState<DiaryComment[]>([]);
   const [commentInput, setCommentInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // LIKE STATE
-  const [likeLoading, setLikeLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   useEffect(() => {
-    if (!router.isReady || !id || Array.isArray(id) || !user || !token) return;
+    if (!router.isReady || !id || Array.isArray(id) || !username) return;
     const diaryId = parseInt(id as string);
 
-    fetchDiaryDetail(user.username, diaryId, token)
-      .then(setEntry)
-      .catch(() => setError("Gagal mengambil detail review"));
+    fetchDiaryDetail(username, diaryId, token ?? undefined)
+      .then((data) => {
+        setEntry(data);
+        setIsLiked(data.is_liked ?? false);
+        setLikesCount(data.likes_count ?? 0);
+      })
+      .catch(() => {
+        setError("Gagal mengambil detail review");
+      });
 
-    fetchDiaryComments(diaryId, token)
-      .then(setComments)
-      .catch(() => setError("Gagal mengambil komentar"));
-  }, [id, router.isReady, user, token]);
+    fetchDiaryComments(diaryId, token ?? undefined)
+      .then((data) => {
+        setComments(data);
+      })
+      .catch(() => {
+        setComments([]);
+      });
+  }, [id, router.isReady, username, token]);
 
   useEffect(() => {
     if (entry) {
@@ -64,22 +75,6 @@ export default function DiaryDetailPage() {
     }
   }, [entry]);
 
-  const handleSubmit = async () => {
-    if (!id || !token || !commentInput.trim()) return;
-    const diaryId = parseInt(id as string);
-
-    try {
-      await postDiaryComment(diaryId, commentInput, token);
-      setCommentInput("");
-      fetchDiaryComments(diaryId, token)
-        .then(setComments)
-        .catch(() => setError("Gagal mengambil komentar"));
-    } catch {
-      setError("Gagal mengirim komentar");
-    }
-  };
-
-  // HANDLE LIKE/UNLIKE
   const handleLike = async () => {
     if (!entry || !token) return;
     setLikeLoading(true);
@@ -93,18 +88,55 @@ export default function DiaryDetailPage() {
         setIsLiked(true);
         setLikesCount((c) => c + 1);
       }
-    } catch {
+      setError(null);
+    } catch (e: any) {
+      if (e?.response?.status === 409) {
+        setError("Kamu sudah memberi like pada diary ini.");
+        setIsLiked(true);
+      } else {
+        setError("Gagal memproses like");
+      }
     } finally {
       setLikeLoading(false);
     }
   };
 
-  if (!entry)
+  const handleSubmit = async () => {
+    if (!entry || !token || !commentInput.trim()) return;
+    try {
+      await postDiaryComment(entry.id, commentInput, token);
+      setCommentInput("");
+      const updatedComments = await fetchDiaryComments(entry.id, token ?? undefined);
+      setComments(updatedComments);
+      setError(null);
+    } catch (e) {
+      setError("Gagal mengirim komentar");
+    }
+  };
+
+  if (error) {
     return (
-      <p className="p-6 text-white bg-[#11161D] min-h-screen">
-        Loading diary...
-      </p>
+      <div className="min-h-screen bg-[#11161D] text-gray-100 p-6">
+        <p className="text-red-500">{error}</p>
+        <button
+          onClick={() => {
+            setError(null);
+            router.reload();
+          }}
+          className="mt-4 px-4 py-2 rounded bg-blue-600 text-white"
+        >
+          Reload
+        </button>
+      </div>
     );
+  }
+  if (!entry) {
+    return (
+      <div className="min-h-screen bg-[#11161D] text-gray-100 p-6">
+        <p>Loading diary…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#11161D] text-gray-100 px-2 py-4 sm:px-6">
@@ -148,7 +180,9 @@ export default function DiaryDetailPage() {
                   </span>
                 )}
             </div>
-            <h2 className="text font-bold mb-1">Review by {user?.username}</h2>
+            <h2 className="text font-bold mb-1">
+              Review by {username}
+            </h2>
             <p className="text-yellow-400 text-lg mb-1">
               {"★".repeat(entry.rating)}
             </p>
@@ -166,77 +200,78 @@ export default function DiaryDetailPage() {
               )}
             </p>
             {/* LIKE BUTTON */}
-            <button
-              onClick={handleLike}
-              disabled={likeLoading}
-              className={`mt-3 flex items-center gap-2 px-3 py-1 rounded-lg ${
-                isLiked
-                  ? "bg-pink-600 hover:bg-pink-700"
-                  : "bg-gray-700 hover:bg-gray-600"
-              } transition-all`}
-            >
-              {isLiked ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="white"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-                  />
-                </svg>
-              )}
-              <span>
-                {likesCount} {likesCount === 1}
-              </span>
-            </button>
+            {token && (
+              <button
+                onClick={handleLike}
+                disabled={likeLoading}
+                className={`mt-3 flex items-center gap-2 px-3 py-1 rounded-lg ${
+                  isLiked
+                    ? "bg-pink-600 hover:bg-pink-700"
+                    : "bg-gray-700 hover:bg-gray-600"
+                } transition-all`}
+              >
+                {isLiked ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="white"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                    />
+                  </svg>
+                )}
+                <span>{likesCount}</span>
+              </button>
+            )}
           </div>
         </div>
         {entry.review && entry.review.trim() !== "" && (
           <>
-            <div className="mb-5 sm:mb-6">
-              <textarea
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                placeholder="Comment your reply…"
-                className="w-full p-3 rounded text-white bg-[#2C3440] resize-none min-h-[64px] text-sm"
-              />
-              <div className="flex justify-end mt-2 gap-2">
-                <button
-                  onClick={() => setCommentInput("")}
-                  className="text-sm px-3 py-1 border rounded border-gray-500 hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 text-white text-sm"
-                >
-                  Submit
-                </button>
+            {token && (
+              <div className="mb-5 sm:mb-6">
+                <textarea
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="Comment your reply…"
+                  className="w-full p-3 rounded text-white bg-[#2C3440] resize-none min-h-[64px] text-sm"
+                />
+                <div className="flex justify-end mt-2 gap-2">
+                  <button
+                    onClick={() => setCommentInput("")}
+                    className="text-sm px-3 py-1 border rounded border-gray-500 hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 text-white text-sm"
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
-              {error && <p className="text-red-500 mt-1">{error}</p>}
-            </div>
+            )}
             <div>
               <h3 className="text-lg font-semibold mb-2">Comments :</h3>
               {comments.length === 0 && (
@@ -248,7 +283,11 @@ export default function DiaryDetailPage() {
                   className="mb-3 sm:mb-4 flex items-start gap-2 sm:gap-3 bg-[#222B37] rounded-lg p-3 sm:p-4"
                 >
                   <img
-                    src={c.user?.profile_picture_url || "/avatars/default.jpg"}
+                    src={
+                      c.user?.profile_picture_url
+                        ? c.user.profile_picture_url
+                        : "/avatars/default.jpg"
+                    }
                     alt={c.user?.username}
                     className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover mt-1"
                   />

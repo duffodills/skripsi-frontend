@@ -27,6 +27,7 @@ const NavbarGuest = () => {
         {/* Desktop nav */}
         <div className="hidden md:flex space-x-8 text-white">
           <Link href="/games" className="hover:underline">Games</Link>
+          <Link href="/forum" className="hover:underline">Forum</Link>
           <Link href="/login" className="hover:underline">Login</Link>
           <Link href="/register" className="hover:underline">Register</Link>
           <Link href="/search" className="hover:underline">Search</Link>

@@ -1,66 +1,52 @@
+// pages/profile/[username]/activity/index.tsx
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/router";
+import { format } from "date-fns";
+import { AlignJustify } from "lucide-react";
 import { DiaryEntry } from "@/interfaces/api/ListsOfApiInterface";
 import { fetchUserDiary } from "lib/api";
-import { format } from "date-fns";
-import { useRouter } from "next/router";
-import { Pencil, Trash, AlignJustify } from "lucide-react";
-import EditReviewModal from "@/components/EditReviewModal";
-import DeleteReviewConfirmModal from "@/components/DeleteReviewConfirmModal";
+import { useAuth } from "@/context/AuthContext"; // opsional jika kamu ingin fetch diary privat
 
-export default function DiaryPage() {
-  const { user, token } = useAuth();
+export default function PublicDiaryPage() {
+  const router = useRouter();
+  const { username } = router.query as { username?: string };
+  const { token } = useAuth(); // <-- opsional, hapus jika diary selalu public
+
   const [entries, setEntries] = useState<DiaryEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [editEntry, setEditEntry] = useState<DiaryEntry | null>(null);
-  const [deleteEntry, setDeleteEntry] = useState<DiaryEntry | null>(null);
-  const router = useRouter();
-
-  const reloadDiary = () => {
-    if (!user || !token) return;
-    fetchUserDiary(user.username, token).then((data) => {
-      const sorted = data.sort(
-        (a, b) =>
-          new Date(b.played_at).getTime() -
-          new Date(a.played_at).getTime()
-      );
-      setEntries(sorted);
-    });
-  };
 
   useEffect(() => {
-    if (!user || !token) return;
-    fetchUserDiary(user.username, token)
+    if (!username) return;
+    fetchUserDiary(username, token ?? undefined)
       .then((data) => {
         const sorted = data.sort(
           (a, b) =>
-            new Date(b.played_at).getTime() -
-            new Date(a.played_at).getTime()
+            new Date(b.played_at).getTime() - new Date(a.played_at).getTime()
         );
         setEntries(sorted);
       })
       .catch(() => setError("Gagal memuat diary"));
-  }, [user, token]);
+  }, [username, token]);
 
-  if (!user || !token) return <p>Belum login</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-  if (entries === null) return <p>Loading…</p>;
+  if (!username) return <p>Loading username...</p>;
+  if (entries === null) return <p>Loading diary...</p>;
 
   let lastGroup = "";
 
   return (
     <div className="min-h-screen bg-[#11161D] text-gray-100">
       <div className="p-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Diary</h1>
+        <h1 className="text-2xl font-bold mb-6">{username}&apos;s Diary</h1>
 
         {/* DESKTOP */}
         <div className="hidden md:block">
-          {/* header */}
           <div
             className="bg-gray-800 rounded text-gray-400 uppercase text-sm mb-2 px-3 py-3 grid"
             style={{
-              gridTemplateColumns: "6rem 3rem 1fr 7rem 5rem 4rem 6rem",
+              gridTemplateColumns: "6rem 3rem 1fr 7rem 5rem 4rem",
               gap: "1rem",
             }}
           >
@@ -70,7 +56,6 @@ export default function DiaryPage() {
             <div>Released</div>
             <div>Rating</div>
             <div>Review</div>
-            <div className="text-center">Edit</div>
           </div>
 
           {entries.length > 0 ? (
@@ -82,26 +67,19 @@ export default function DiaryPage() {
                   const showGroup = groupKey !== lastGroup;
                   lastGroup = groupKey;
 
-                  let releaseYear = "-";
-                  if (entry.game.first_release_date) {
-                    const d = new Date(entry.game.first_release_date);
-                    if (!isNaN(d.getTime())) {
-                      releaseYear = d.getFullYear().toString();
-                    }
-                  }
+                  const releaseYear = entry.game.first_release_date
+                    ? new Date(entry.game.first_release_date).getFullYear().toString()
+                    : "-";
 
-                  const gameUrl = entry.game.slug
-                    ? `/games/${entry.game.slug}`
-                    : `/games/${entry.game.igdb_id}`;
+                  const detailUrl = `/profile/${username}/activity/${entry.id}`;
 
                   return (
                     <tr key={entry.id} className="border-none">
-                      <td colSpan={7} className="py-2 px-0 align-top">
+                      <td colSpan={6} className="py-2 px-0 align-top">
                         <div
                           className="bg-gray-800 rounded shadow p-3 transition-all grid items-center"
                           style={{
-                            gridTemplateColumns:
-                              "6rem 3rem 1fr 7rem 5rem 4rem 6rem",
+                            gridTemplateColumns: "6rem 3rem 1fr 7rem 5rem 4rem",
                             gap: "1rem",
                           }}
                         >
@@ -126,7 +104,7 @@ export default function DiaryPage() {
                               className="w-10 aspect-[3/4] object-cover rounded"
                             />
                             <Link
-                              href={gameUrl}
+                              href={detailUrl}
                               className="font-semibold hover:text-blue-400 transition"
                               title={entry.game.name}
                             >
@@ -138,29 +116,13 @@ export default function DiaryPage() {
                             {"★".repeat(entry.rating)}
                           </div>
                           <div className="flex gap-2 justify-center">
-                            <button
-                              title="Lihat review"
+                            <Link
+                              href={detailUrl}
                               className="hover:text-blue-400"
-                              onClick={() =>
-                                router.push(`/activity/${entry.id}`)
-                              }
+                              title="Lihat review"
                             >
                               <AlignJustify size={18} />
-                            </button>
-                          </div>
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              className="hover:text-yellow-400"
-                              onClick={() => setEditEntry(entry)}
-                            >
-                              <Pencil size={18} />
-                            </button>
-                            <button
-                              className="hover:text-red-500"
-                              onClick={() => setDeleteEntry(entry)}
-                            >
-                              <Trash size={18} />
-                            </button>
+                            </Link>
                           </div>
                         </div>
                       </td>
@@ -171,9 +133,7 @@ export default function DiaryPage() {
             </table>
           ) : (
             <div className="bg-gray-800 rounded shadow h-60 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">
-                No Diary Entry
-              </span>
+              <span className="text-gray-400 text-lg">No Diary Entry</span>
             </div>
           )}
         </div>
@@ -183,16 +143,10 @@ export default function DiaryPage() {
           {entries.length > 0 ? (
             entries.map((entry) => {
               const playedDate = new Date(entry.played_at);
-              let releaseYear = "-";
-              if (entry.game.first_release_date) {
-                const d = new Date(entry.game.first_release_date);
-                if (!isNaN(d.getTime())) {
-                  releaseYear = d.getFullYear().toString();
-                }
-              }
-              const gameUrl = entry.game.slug
-                ? `/games/${entry.game.slug}`
-                : `/games/${entry.game.igdb_id}`;
+              const releaseYear = entry.game.first_release_date
+                ? new Date(entry.game.first_release_date).getFullYear().toString()
+                : "-";
+              const detailUrl = `/profile/${username}/activity/${entry.id}`;
 
               return (
                 <div
@@ -207,7 +161,7 @@ export default function DiaryPage() {
                     />
                     <div>
                       <Link
-                        href={gameUrl}
+                        href={detailUrl}
                         className="font-bold hover:text-blue-400 transition"
                         title={entry.game.name}
                       >
@@ -220,8 +174,7 @@ export default function DiaryPage() {
                   </div>
                   <div className="flex flex-wrap text-sm gap-2">
                     <span>
-                      <span className="text-gray-400">Released:</span>{" "}
-                      {releaseYear}
+                      <span className="text-gray-400">Released:</span> {releaseYear}
                     </span>
                     <span>
                       <span className="text-gray-400">Rating:</span>{" "}
@@ -230,64 +183,26 @@ export default function DiaryPage() {
                       </span>
                     </span>
                     <span>
-                      <span className="text-gray-400">Review:</span>
+                      <span className="text-gray-400">Review:</span>{" "}
                       <button
-                        title="Lihat review"
+                        onClick={() => router.push(detailUrl)}
                         className="ml-1 hover:text-blue-400"
-                        onClick={() =>
-                          router.push(`/activity/${entry.id}`)
-                        }
+                        title="Lihat review"
                       >
                         <AlignJustify size={18} />
                       </button>
                     </span>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      className="hover:text-yellow-400"
-                      onClick={() => setEditEntry(entry)}
-                    >
-                      <Pencil size={18} />
-                    </button>
-                    <button
-                      className="hover:text-red-500"
-                      onClick={() => setDeleteEntry(entry)}
-                    >
-                      <Trash size={18} />
-                    </button>
                   </div>
                 </div>
               );
             })
           ) : (
             <div className="bg-gray-800 rounded shadow p-6 text-center">
-              <span className="text-gray-400 text-lg">
-                No Diary Entry
-              </span>
+              <span className="text-gray-400 text-lg">No Diary Entry</span>
             </div>
           )}
         </div>
       </div>
-
-      <EditReviewModal
-        diary={editEntry}
-        isOpen={!!editEntry}
-        onClose={() => setEditEntry(null)}
-        onSuccess={() => {
-          setEditEntry(null);
-          reloadDiary();
-        }}
-      />
-      <DeleteReviewConfirmModal
-        isOpen={!!deleteEntry}
-        onClose={() => setDeleteEntry(null)}
-        diaryId={deleteEntry?.id ?? 0}
-        gameName={deleteEntry?.game.name ?? ""}
-        onDeleted={() => {
-          setDeleteEntry(null);
-          reloadDiary();
-        }}
-      />
     </div>
   );
 }

@@ -54,7 +54,7 @@ useEffect(() => {
   });
 
   return (
-    <div className="min-h-screen bg-[#11161D] text-gray-100 p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-[#11161D] text-gray-100 p-4 sm:p-6 md:p-8 ">
       <div className="flex flex-col md:flex-row justify-between gap-6 mb-12">
         <div className="flex items-center space-x-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden">
@@ -84,6 +84,7 @@ useEffect(() => {
                 />
               )}
             </div>
+            <div className="text-gray-300 italic">{profile.firstname} {profile.lastname}</div>
             <p className="mt-2 text-gray-400 max-w-md">{profile.bio ?? ""}</p>
           </div>
         </div>
